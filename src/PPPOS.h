@@ -4,8 +4,9 @@
 extern "C" {
 #endif
 
-
-#define BUF_SIZE (1024)
+#ifndef PPPOS_BUFFER_SIZE
+#define PPPOS_BUFFER_SIZE (1024)
+#endif
 
 
 void PPPOS_init(int txPin, int rxPin, int baudrate, int uart_number, char* user, char* pass);

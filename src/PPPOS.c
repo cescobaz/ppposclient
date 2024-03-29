@@ -32,7 +32,8 @@ bool PPPOS_connected = false;
 bool PPPOS_started = false;
 char *PPP_User = "";
 char *PPP_Pass = "";
-char PPPOS_out[BUF_SIZE];
+char PPPOS_out[PPPOS_BUFFER_SIZE];
+char PPPOS_in[PPPOS_BUFFER_SIZE];
 
 /* UART */
 int PPPOS_uart_num;
@@ -155,21 +156,17 @@ static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx)
 
 static void pppos_client_task(void *pvParameters)
 {
- 
-char* data =  (char*)malloc(BUF_SIZE);
-    while (1) {  
+    while (1) {
         while (PPPOS_started) {
-            memset(data, 0, BUF_SIZE);
-            int len = uart_read_bytes(PPPOS_uart_num, (uint8_t *)data, BUF_SIZE, 10 / portTICK_RATE_MS);
+            memset(PPPOS_in, 0, PPPOS_BUFFER_SIZE);
+            int len = uart_read_bytes(PPPOS_uart_num, (uint8_t *)PPPOS_in, PPPOS_BUFFER_SIZE, 10 / portTICK_RATE_MS);
             if (len > 0) {
-                pppos_input_tcpip(ppp, (u8_t *)data, len);
+                pppos_input_tcpip(ppp, (u8_t *)PPPOS_in, len);
             }
-             vTaskDelay(100 / portTICK_PERIOD_MS);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
-       }
-      
-    
+    }
 }
 void PPPOS_init(int txPin, int rxPin, int baudrate, int uart_number, char* user, char* pass){
   PPPOS_uart_num = uart_number;
@@ -187,7 +184,7 @@ void PPPOS_init(int txPin, int rxPin, int baudrate, int uart_number, char* user,
 
   uart_param_config(PPPOS_uart_num, &uart_config) ;
   uart_set_pin(PPPOS_uart_num, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-  uart_driver_install(PPPOS_uart_num, BUF_SIZE * 2, BUF_SIZE * 2, 0, NULL, 0);   
+  uart_driver_install(PPPOS_uart_num, PPPOS_BUFFER_SIZE * 2, PPPOS_BUFFER_SIZE * 2, 0, NULL, 0);   
   tcpip_adapter_init();
   PPP_User = user;
   PPP_Pass = pass;
@@ -224,8 +221,8 @@ void PPPOS_stop(){
 }
 
 char* PPPOS_read(){
-  memset(PPPOS_out, 0, BUF_SIZE);
-  int len = uart_read_bytes(PPPOS_uart_num, (uint8_t *)PPPOS_out, BUF_SIZE, 10 / portTICK_RATE_MS);
+  memset(PPPOS_out, 0, PPPOS_BUFFER_SIZE);
+  int len = uart_read_bytes(PPPOS_uart_num, (uint8_t *)PPPOS_out, PPPOS_BUFFER_SIZE, 10 / portTICK_RATE_MS);
   if (len > 0) {
     return PPPOS_out;
   } else {
