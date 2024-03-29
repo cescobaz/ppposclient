@@ -212,6 +212,10 @@ void PPPOS_start(){
         PPPOS_firststart = true;
 }
 
+struct netif *PPPOS_getNetif() {
+  return &ppp_netif;
+}
+
 bool PPPOS_status(){
   return PPPOS_started;
 }
